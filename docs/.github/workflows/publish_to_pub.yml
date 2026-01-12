@@ -1,0 +1,42 @@
+name: Publish docs to pub (versioned)
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout docs repo
+        uses: actions/checkout@v4
+
+      - name: Compute minor folder (v6.1)
+        run: |
+          TAG="${GITHUB_REF_NAME}"                     # e.g. v6.1.2
+          MINOR="$(echo "$TAG" | awk -F. '{print $1"."$2}')"  # v6.1
+          echo "MINOR=$MINOR" >> $GITHUB_ENV
+
+      - name: Checkout pub repo
+        uses: actions/checkout@v4
+        with:
+          repository: EdoBoorsma/pub
+          token: ${{ secrets.PUB_TOKEN }}
+          path: pub
+
+      - name: Copy docs site into /<minor>/
+        run: |
+          DEST="pub/${MINOR}"
+          rm -rf "$DEST"
+          mkdir -p "$DEST"
+          cp -R docs/* "$DEST/"
+
+      - name: Commit and push
+        run: |
+          cd pub
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add .
+          git commit -m "Publish docs ${GITHUB_REF_NAME} -> ${MINOR}" || exit 0
+          git push
