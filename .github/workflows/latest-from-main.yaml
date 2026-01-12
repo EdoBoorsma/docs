@@ -13,7 +13,7 @@ jobs:
 
       - name: Copy docs and publish to pub
         run: |
-          MINOR="$(cat version | tr -d ' \n\r\t')"
+          MINOR="$(cat docs/version | tr -d ' \n\r\t')"
 
           git clone https://${{ secrets.PUB_TOKEN }}@github.com/EdoBoorsma/pub.git pub
 
