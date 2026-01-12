@@ -1,0 +1,30 @@
+name: Publish docs to pub (versioned)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy docs and publish to pub
+        run: |
+          MINOR="$(cat version | tr -d ' \n\r\t')"
+
+          git clone https://${{ secrets.PUB_TOKEN }}@github.com/EdoBoorsma/pub.git pub
+
+          DEST="pub/${MINOR}"
+          mkdir -p "$DEST"
+          rm -rf "$DEST"/*
+          cp -R docs/* "$DEST/"
+
+          cd pub
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add "${MINOR}"
+          git commit -m "Publish docs main -> ${MINOR}" || exit 0
+          git push
